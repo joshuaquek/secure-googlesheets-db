@@ -12,7 +12,8 @@
     "bluebird": "^3.5.0"
   },
   "scripts": {
-    "pretest":"flow-remove-types --pretty ./src/ -d ./",
+    "build": "flow-remove-types --pretty ./src/ -d ./",
+    "pretest": "flow-remove-types --pretty ./src/ -d ./",
     "test": "node test/test.js",
     "flow": "flow"
   },
