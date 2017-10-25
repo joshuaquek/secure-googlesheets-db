@@ -12,8 +12,9 @@
     "bluebird": "^3.5.0"
   },
   "scripts": {
-    "test": "mocha --reporter spec",
-    "dev": "node test/test.js"
+    "pretest":"flow-remove-types --pretty ./src/ -d ./",
+    "test": "node test/test.js",
+    "flow": "flow"
   },
   "repository": {
     "type": "git",
@@ -27,6 +28,8 @@
   "homepage": "https://github.com/joshuaquek/secure-googlesheets-db#readme",
   "devDependencies": {
     "chai": "^4.1.2",
+    "flow-bin": "^0.57.3",
+    "flow-remove-types": "^1.2.3",
     "mocha": "^4.0.1"
   }
 }

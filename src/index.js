@@ -1,11 +1,11 @@
-// 
+// @flow
 const GoogleSpreadsheet = require('google-spreadsheet');
 const Promise = require('bluebird');
 let isConnected = false
 let info = undefined
 let currentSheet = undefined // Used after connecting
 
-exports.connect = function ( sheetId , credentials ) {
+exports.connect = function ( sheetId: String , credentials: Object ) {
   return new Promise(function(resolve, reject) {
     let doc = new GoogleSpreadsheet(sheetId)
     doc.useServiceAccountAuth(credentials, () => {
@@ -25,7 +25,7 @@ exports.connect = function ( sheetId , credentials ) {
 
 exports.isConnected = isConnected
 
-exports.listOutAllTables = (columnNamesArray) => {
+exports.listOutAllTables = (columnNamesArray: Array<Object>) => {
   return new Promise(function(resolve, reject) {
     if(!isConnected) reject("Database is not connected.")
     for( worksheet in info.worksheets){

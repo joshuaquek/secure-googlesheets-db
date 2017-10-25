@@ -65,3 +65,6 @@ google-generated-creds.json
 
 # Mac DS Store File
 \.DS_Store
+
+# Ignore test files
+test/
