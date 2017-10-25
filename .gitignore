@@ -57,3 +57,11 @@ typings/
 # dotenv environment variables file
 .env
 
+# Google Spreadsheets Credentials
+google-generated-creds.json
+
+# IDE
+.idea
+
+# Mac DS Store File
+\.DS_Store
