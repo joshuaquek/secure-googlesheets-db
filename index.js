@@ -6,8 +6,36 @@ let payload = undefined
 let sheets = []
 let currentSheet = undefined // Used after connecting
 
-exports.connect = function ( sheetId , credentials ) {
-  return new Promise(function(resolve, reject) {
+// ----- Helper Functions -----
+
+let getTable = (tableName, callback ) => {
+  if(!isConnected) callback("ERROR: Database is not connected.", {})
+  let sheet = sheets.find((sheet) => {
+    return sheet.title === tableName
+  }) || null
+  if(sheet != null){
+    callback(null, sheet)
+  }else{
+    callback("ERROR: Table/Sheet does not exist.", {})
+  }
+}
+
+let getTableHeaders = (sheet, callback) => {
+  sheet.getCells({
+   'min-row': 1,
+   'max-row': 1,
+   'return-empty': false
+ }, function(err, cells) {
+   if(err) callback(err,[])
+   let tableHeaders = cells.map(cell => cell._value.replace(/[^A-Za-z-]/g, "").toLowerCase())
+   callback(null, tableHeaders)
+ })
+}
+
+// ----- Module Exports -----
+
+exports.connect = ( sheetId , credentials ) => {
+  return new Promise( (resolve, reject) => {
     let doc = new GoogleSpreadsheet(sheetId)
     doc.useServiceAccountAuth(credentials, () => {
       doc.getInfo(function(err, payloadObject) {
@@ -25,11 +53,9 @@ exports.connect = function ( sheetId , credentials ) {
   })
 }
 
-exports.isConnected = isConnected
-
 exports.listOutAllTables = () => {
-  return new Promise(function(resolve, reject) {
-    if(!isConnected) reject("Database is not connected.")
+  return new Promise( (resolve, reject) => {
+    if(!isConnected) reject("ERROR: Database is not connected.")
     let worksheets = payload.worksheets.map((sheet) => {
       return sheet.title
     })
@@ -37,16 +63,40 @@ exports.listOutAllTables = () => {
   })
 }
 
-exports.insert = function ( tableName , data ) {
-  return new Promise(function(resolve, reject) {
-    if(!isConnected) reject("Database is not connected.")
-    let sheet = sheets.find((sheet) => {
-      return sheet.title === tableName
-    }) || null
+// Sidenote: Example format of dataToInsert = { firstname: "John", lastname:"Doe", gender: "male"}
+// ... If say 'lastname' is not present as a column in the DB, it will simply skip and not insert. No errors thrown.
+exports.insert = ( tableName , dataToInsert ) => {
+  return new Promise( (resolve, reject) => {
+    getTable(tableName, (err, sheet) => {
+      sheet.addRow( dataToInsert , (err, row) => {
+        err ? reject(err): resolve(row)
+      })
+    })
+  })
+}
 
-    resolve(sheet)
-    // sheet.addRow( data , (err, row) => {
-    //   err ? ( console.log(err) , reject(err) ) : ( console.log(row) , resolve(row) )
-    // })
+exports.getTableHeaders = (tableName) => {
+  return new Promise(function(resolve, reject) {
+    getTable(tableName, (err, sheet) => {
+      if(err) reject(err)
+      getTableHeaders(sheet, (err, headers) => {
+        if(err) reject(err)
+        resolve(headers)
+      })
+    })
+  })
+}
+
+exports.update = (tableName, dataToUpdate) => {
+  return new Promise(function(resolve, reject) {
+    getTable(tableName, (err, sheet) => {
+      if(err) reject(err)
+      resolve(sheet)
+      // sheet.getRows({ offset: 2 }, function( err, rows ){
+      //   if(err) console.log(err)
+      //   rows[1].test = 'new val';
+      //   rows[1].save();
+      // })
+    })
   })
 }

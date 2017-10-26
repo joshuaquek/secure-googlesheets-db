@@ -2,10 +2,9 @@ const SecureSheet = require('../index.js')
 const creds = require( '../google-generated-creds.json');
 const { test, success, output, done } = require('./TestHelpers.js')
 
-// ------ Run Test ------
-
+// ------ Run Test Main Function ------
 let run = async () => {
-  console.log("⚠️ ⚠️ Start Tests ⚠️ ⚠️ \n");
+  console.log("⚠️ ⚠️  Start Tests ⚠️ ⚠️ \n");
 
   // First Test
   test(1, "Testing for db connection")
@@ -20,14 +19,18 @@ let run = async () => {
 
   //Third Test
   test(3, "Testing for data insertion")
-  let insertion = await SecureSheet.insert("Sheet1", {name: "test"})
-  console.log(insertion);
+  let insertion = await SecureSheet.insert("Sheet1", {sn: "test"})
+  output(insertion);
+  success()
+
+  //Fourth Test
+  test(4, "Testing for data updating")
+  let updating = await SecureSheet.update("Sheet1", {lol: "test"})
+  output(updating)
   success()
 
   done()
 }
-
-
 
 // Run test
 run().catch((error) => {
