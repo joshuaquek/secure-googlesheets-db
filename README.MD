@@ -30,7 +30,7 @@ Looking for a novel way to store your data? Look no further! Semi-production rea
 
   #### Inserting Data
 
-  <Code already exists. Documentation coming soon>
+  Code already exists. Documentation coming soon
 
 ## Tests
 
