@@ -61,6 +61,8 @@ exports.connect = ( sheetId , credentials ) => {
   })
 }
 
+exports.isConnected = isConnected
+
 exports.getAllTableTitles = () => {
   return new Promise( (resolve, reject) => {
     if(!isConnected) reject(Error("ERROR: Database is not connected."))
@@ -106,12 +108,11 @@ exports.insert = ( tableName , dataToInsert ) => {
           err ? reject(err): resolve(row)
         })
       }
-
     })
   })
 }
 
-exports.update = (tableName, dataToUpdate) => {
+exports.update = (tableName, dataToUpdate, {upsert = false}) => {
   return new Promise(function(resolve, reject) {
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)

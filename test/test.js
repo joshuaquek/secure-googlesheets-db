@@ -1,4 +1,4 @@
-const SecureSheetDB = require('../index.js')
+const SecureSheetsDB = require('../index.js')
 const creds = require( '../google-generated-creds.json');
 const { test, success, output, done } = require('./TestHelpers.js')
 
@@ -8,28 +8,29 @@ let run = async () => {
 
   // First Test
   test(1, "Testing for db connection")
-  await SecureSheetDB.connect('1xusj_IWRF05dHlgnZnP5p1W4N7YNquA2fv4AHMzHq4c', creds )
+  let isConnected = await SecureSheetsDB.connect('1xusj_IWRF05dHlgnZnP5p1W4N7YNquA2fv4AHMzHq4c', creds )
+  output(isConnected)
   success()
 
   // Second Test
   test(2, "Testing for listing out of all tables")
-  let tables = await SecureSheetDB.getAllTableTitles()
+  let tables = await SecureSheetsDB.getAllTableTitles()
   output(tables)
   success()
 
-  //Third Test
+  // Third Test
   test(3, "Testing for data insertion")
-  let insertion = await SecureSheetDB.insert("Sheet3", {})
+  let insertion = await SecureSheetsDB.insert("Sheet1", {description:"Hello"})
   output(insertion);
   success()
 
-  //Fourth Test
-  // test(4, "Testing to get table headers")
-  // let headers = await SecureSheetDB.getAllTableHeaderTitles("Sheet1")
-  // output(headers)
-  // success()
+  // Fourth Test
+  test(4, "Testing to get table headers")
+  let headers = await SecureSheetsDB.getAllTableHeaderTitles("Sheet1")
+  output(headers)
+  success()
 
-  // Fifth Test
+  // // Fifth Test
   // test(5, "Testing for data updating")
   // let updating = await SecureSheetDB.update("Sheet1", {lol: "zzz"})
   // output(updating)
