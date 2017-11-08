@@ -124,3 +124,32 @@ exports.update = (tableName, dataToUpdate, {upsert = false}) => {
     })
   })
 }
+
+
+exports.zz = (tableName, query ) => {
+  return new Promise(function(resolve, reject) {
+    getTable(tableName, (err, sheet) => {
+      if(err) reject(err)
+      sheet.getRows({ offset: 1 }, function( err, rows ){
+        if(err) console.log(err)
+
+      })
+    })
+  })
+}
+
+
+
+exports.select = (tableName, query) => {
+  return new Promise(function(resolve, reject) {
+    getTable(tableName, (err, sheet) => {
+      if(err) reject(err)
+      sheet.getRows({ offset: 1 }, function( err, rows ){
+        if(err) console.log(err)
+        resolve({
+
+        })
+      })
+    })
+  })
+}

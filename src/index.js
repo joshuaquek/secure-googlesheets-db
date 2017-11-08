@@ -42,6 +42,33 @@ let getTableHeaders = (sheet: any, callback: (error: string | null, headersArray
  })
 }
 
+let compute = (queryObject: {[string]: string}, tableName: string, columnTitle: string | null, queryType: string, equalsText: string | null) => {
+  return new Promise(function(resolve, reject) {
+    getTable(tableName, (err, sheet) => {
+      if(err) reject(err)
+      switch(queryType) {
+        case "equals":
+
+        break;
+        case "contains":
+
+        break;
+        case "moreThan":
+
+        break;
+        case "lessThan":
+
+        break;
+        case "selectFrom":
+
+        break;
+        default:
+
+      }
+    })
+  });
+}
+
 // ----- Module Exports -----
 
 exports.connect = ( sheetId: string , credentials: any ): Promise<boolean,Error> => {
@@ -63,7 +90,7 @@ exports.connect = ( sheetId: string , credentials: any ): Promise<boolean,Error>
 
 exports.isConnected = isConnected
 
-exports.getAllTableTitles = (): Promise<Array<any>,Error> => {
+exports.getAllTableNames = (): Promise<Array<any>,Error> => {
   return new Promise( (resolve, reject) => {
     if(!isConnected) reject(Error("ERROR: Database is not connected."))
     let worksheets = workbook.worksheets.map((sheet) => {
@@ -73,7 +100,7 @@ exports.getAllTableTitles = (): Promise<Array<any>,Error> => {
   })
 }
 
-exports.getAllTableHeaderTitles = (tableName: string): Promise<Array<string>,Error> => {
+exports.getAllHeaders = (tableName: string): Promise<Array<string>,Error> => {
   return new Promise(function(resolve, reject) {
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)
@@ -81,6 +108,13 @@ exports.getAllTableHeaderTitles = (tableName: string): Promise<Array<string>,Err
         err ? reject(err) : resolve(headers)
       })
     })
+  })
+}
+
+
+exports.newInsertObject = (tableName: string) => {
+  getTableHeaders(tableName, () => {
+
   })
 }
 
@@ -120,6 +154,74 @@ exports.update = (tableName: string, dataToUpdate: any, {upsert = false}: {upser
         if(err) console.log(err)
         rows[1].test = 'new val';
         rows[1].save();
+      })
+    })
+  })
+}
+
+
+exports.find = (tableName: string, queryDictionary: {[string]: string}): Promise<any, Error> => {
+  return new Promise(function(resolve, reject) {
+    getTable(tableName, (err, sheet) => {
+      if(err) reject(err)
+      sheet.getRows({ offset: 1 }, function( err, rows ){
+        if(err) console.log(err)
+        // State for storing conditions to check :
+        let equalsQuery: {[string]: string} = {}
+        let containsQuery: {[string]: string} = {}
+        let greaterThanQuery: {[string]: string} = {}
+        let lesserThanQuery: {[string]: string} = {}
+        // Interpret Query :
+        for(let key in queryDictionary){
+          if( typeof queryDictionary[key] === 'object' && !Array.isArray(queryDictionary[key]) ){ // If it is an $in / $gt / $lt query
+            let customQueryDictionary = queryDictionary[key]
+            for(let selectorKey in customQueryDictionary ){
+              if(selectorKey == '$in'){
+                containsQuery[key] = customQueryDictionary[selectorKey]
+              }
+              if(selectorKey == '$gt'){
+                greaterThanQuery[key] = customQueryDictionary[selectorKey]
+              }
+              if(selectorKey == '$lt'){
+                containsQuery[key] = customQueryDictionary[selectorKey]
+              }
+            }
+          }else{ // If it is a regular find() matching query
+            equalsQuery[key] = queryDictionary[key]
+          }
+        }
+
+        if(!_.isEmpty(equalsQuery)){ // If EQUALS query is not empty
+          rows = _.filter(rows, equalsQuery)
+        }
+
+        if(!_.isEmpty(containsQuery)){ // If EQUALS query is not empty
+          _.forOwn(containsQuery, (value, key) => {
+            rows = _.filter(rows, (row) => {
+              return _.includes(row[key], value)
+            })
+          })
+        }
+
+        if(!_.isEmpty(greaterThanQuery)){ // If EQUALS query is not empty
+          _.forOwn(greaterThanQuery, (value, key) => {
+            rows = _.filter(rows, (row) => {
+              return parseInt(row[key]) > value
+            })
+          })
+        }
+
+        if(!_.isEmpty(lesserThanQuery)){ // If EQUALS query is not empty
+          _.forOwn(lesserThanQuery, (value, key) => {
+            rows = _.filter(rows, (row) => {
+              return parseInt(row[key]) < value
+            })
+          })
+        }
+
+        resolve(rows)
+        // rows[1].test = 'new val';
+        // rows[1].save();
       })
     })
   })

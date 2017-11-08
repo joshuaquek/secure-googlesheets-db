@@ -17,7 +17,7 @@ Looking for a novel way to store your data? Look no further! Semi-production rea
 
     const creds = require( '../google-generated-creds.json');
 
-    let mySheetId = '1xusj_IWRF05_lgnZnP_1W4N7_YNquA2fv4AHMzKLe_2'
+    let mySheetId = '2xusj_IWRF05_lgnZnP_1W4N7_YNquA2fv4AHMzKLe_2'
 
     SecureSheetsDB.connect(mySheetId, creds)
 
