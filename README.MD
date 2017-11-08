@@ -6,6 +6,12 @@ Looking for a novel way to store your data? Look no further! Semi-production rea
 ## Installation
 
   `npm install secure-googlesheets-db`
+  OR
+  `npm install secure-googlesheets-db --save`
+
+
+  you would install it globally on the system
+  `npm install -g secure-googlesheets-db`
 
 ## Usage
 
