@@ -30,10 +30,10 @@ let run = async () => {
   output(headers)
   success()
 
-  // Fifth Test 
+  // Fifth Test
   test(5, "Testing to find record")
-  let headers = await SecureSheetsDB.getAllHeadersOfTable("Sheet1")
-  output(headers)
+  let finder = await SecureSheetsDB.find("Sheet1", {nameofeatery: "Raffles Place"})
+  output(finder)
   success()
 
 

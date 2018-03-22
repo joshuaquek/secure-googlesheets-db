@@ -149,21 +149,24 @@ let update = (tableName: string, searchCriteria: any, updateRecord: any, {upsert
 }
 
 
-
+// EXAMPLE USAGE --> find("People", {name: "John Doe"})
 let find = (tableName: string, queryDictionary: {[string]: string}): Promise<any, Error> => {
   return new Promise(function(resolve, reject) {
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)
       sheet.getRows({ offset: 1 }, function( err, rows ){
         if(err) console.log(err)
+
         // State for storing conditions to check :
         let equalsQuery: {[string]: string} = {}
         let containsQuery: {[string]: string} = {}
         let greaterThanQuery: {[string]: string} = {}
         let lesserThanQuery: {[string]: string} = {}
+
         // Interpret Query :
         for(let key in queryDictionary){
           if( typeof queryDictionary[key] === 'object' && !Array.isArray(queryDictionary[key]) ){ // If it is an $in / $gt / $lt query
+
             let customQueryDictionary = queryDictionary[key]
             for(let selectorKey in customQueryDictionary ){
               if(selectorKey == '$in'){
