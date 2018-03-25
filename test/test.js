@@ -21,6 +21,10 @@ let run = async () => {
   // Third Test
   test(3, "Testing for data insertion")
   let insertion = await SecureSheetsDB.insert("Sheet1", {nameofeatery: "Raffles Place", description:"A place with lots of food.", latitude: 7.77, longitude: 5.55})
+  delete insertion['id'] // Remove redundant metadata from object
+  delete insertion['_xml'] // Remove redundant metadata from object
+  delete insertion['app:edited'] // Remove redundant metadata from object
+  delete insertion['_links'] // Remove redundant metadata from object
   output(insertion);
   success()
 

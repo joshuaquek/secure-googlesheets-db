@@ -1,4 +1,4 @@
-//
+// 
 const GoogleSpreadsheet = require('google-spreadsheet')
 const Promise = require('bluebird')
 const _ = require('lodash');
@@ -155,8 +155,7 @@ let find = (tableName, queryDictionary) => {
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)
       sheet.getRows({ offset: 1 }, function( err, rows ){
-        if(err) console.log(err)
-        // TODO: Add in _.find() here
+        if(err)( console.log(err), console.trace(), resolve("Error at line ") )
 
       })
     })

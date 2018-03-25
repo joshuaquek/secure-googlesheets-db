@@ -155,63 +155,8 @@ let find = (tableName: string, queryDictionary: {[string]: string}): Promise<any
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)
       sheet.getRows({ offset: 1 }, function( err, rows ){
-        if(err) console.log(err)
+        if(err)( console.log(err), console.trace(), resolve("Error at line ") )
 
-        // State for storing conditions to check :
-        let equalsQuery: {[string]: string} = {}
-        let containsQuery: {[string]: string} = {}
-        let greaterThanQuery: {[string]: string} = {}
-        let lesserThanQuery: {[string]: string} = {}
-
-        // Interpret Query :
-        for(let key in queryDictionary){
-          if( typeof queryDictionary[key] === 'object' && !Array.isArray(queryDictionary[key]) ){ // If it is an $in / $gt / $lt query
-
-            let customQueryDictionary = queryDictionary[key]
-            for(let selectorKey in customQueryDictionary ){
-              if(selectorKey == '$in'){
-                containsQuery[key] = customQueryDictionary[selectorKey]
-              }
-              if(selectorKey == '$gt'){
-                greaterThanQuery[key] = customQueryDictionary[selectorKey]
-              }
-              if(selectorKey == '$lt'){
-                containsQuery[key] = customQueryDictionary[selectorKey]
-              }
-            }
-          }else{ // If it is a regular find() matching query
-            equalsQuery[key] = queryDictionary[key]
-          }
-        }
-
-        if(!_.isEmpty(equalsQuery)){ // If EQUALS query is not empty
-          rows = _.filter(rows, equalsQuery)
-        }
-
-        if(!_.isEmpty(containsQuery)){ // If EQUALS query is not empty
-          _.forOwn(containsQuery, (value, key) => {
-            rows = _.filter(rows, (row) => {
-              return _.includes(row[key], value)
-            })
-          })
-        }
-
-        if(!_.isEmpty(greaterThanQuery)){ // If EQUALS query is not empty
-          _.forOwn(greaterThanQuery, (value, key) => {
-            rows = _.filter(rows, (row) => {
-              return parseInt(row[key]) > value
-            })
-          })
-        }
-
-        if(!_.isEmpty(lesserThanQuery)){ // If EQUALS query is not empty
-          _.forOwn(lesserThanQuery, (value, key) => {
-            rows = _.filter(rows, (row) => {
-              return parseInt(row[key]) < value
-            })
-          })
-        }
-        resolve(rows)
       })
     })
   })

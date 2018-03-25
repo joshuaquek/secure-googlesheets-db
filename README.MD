@@ -11,7 +11,6 @@ Looking for a novel way to store your data? Look no further! Semi-production rea
 
   `npm install secure-googlesheets-db --save`
 
-
 ## Usage
 
 #### Connecting to Google Sheets

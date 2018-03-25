@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Looking for a novel way to store your data? Look no further! Semi-production ready, and best of all, its free!",
   "main": "index.js",
+  "private": true,
   "engines": {
     "node": ">=8.4.0",
     "npm": ">=5.3.0"
