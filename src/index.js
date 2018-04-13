@@ -37,7 +37,7 @@ let getTable = (tableName: string, callback: (error: Error | null, sheet: any ) 
 
 // Takes in a Sheet object.
 // Returns an array of strings, which are the table headers.
-// Example: ['id', 'name', 'gender', 'age']
+// Example return object: ['id', 'name', 'gender', 'age']
 let getTableHeaders = (sheet: any, callback: (error: string | null, headersArray: Array<string> ) => void) => {
   sheet.getCells({
     'min-row': 1,
@@ -48,6 +48,18 @@ let getTableHeaders = (sheet: any, callback: (error: string | null, headersArray
     let tableHeaders = cells.map(cell => cell._value.replace(/[^A-Za-z-]/g, "").toLowerCase())
     callback(null, tableHeaders)
   })
+}
+
+// Takes in a SpreadsheetRow Object.
+// Returns an array of record objects, stripped of redundant metadata fields}
+let stripAndCleanRecord = (spreadsheetRowObject: any): any => {
+  delete spreadsheetRowObject['id'] // Remove redundant metadata from object
+  delete spreadsheetRowObject['_xml'] // Remove redundant metadata from object
+  delete spreadsheetRowObject['app:edited'] // Remove redundant metadata from object
+  delete spreadsheetRowObject['_links'] // Remove redundant metadata from object
+  delete spreadsheetRowObject['save'] // Remove redundant metadata from object
+  delete spreadsheetRowObject['del'] // Remove redundant metadata from object
+  return JSON.parse( JSON.stringify(spreadsheetRowObject) )
 }
 
 // ------- CORE FEATURES --------
@@ -69,8 +81,11 @@ let connect = ( sheetId: string , credentials: any ): Promise<boolean,Error> => 
   })
 }
 
+let getConnectionStatus = (): boolean => {
+  return isConnected
+}
 
-let newTemplateRecord = (tableName: string) => {
+let template = (tableName: string): Promise<any,Error>  => {
   return new Promise(async (resolve, reject) => {
     try{ // Try block for handling Promise rejection
       let headersArray: [string] = await getAllHeadersOfTable(tableName)
@@ -150,16 +165,51 @@ let update = (tableName: string, searchCriteria: any, updateRecord: any, {upsert
 
 
 // EXAMPLE USAGE --> find("People", {name: "John Doe"})
+let findOne = (tableName: string, queryDictionary: {[string]: string}): Promise<any, Error> => {
+  return new Promise(function(resolve, reject) {
+    getTable(tableName, (err, sheet) => {
+      if(err) reject(err)
+      sheet.getRows({ offset: 1 }, function( err, rows ){
+        if(err)( console.log(err), console.trace(), resolve("Error at line ") )
+        let object = (_.find(rows, queryDictionary) || {})
+        let cleanObject = stripAndCleanRecord(object)
+        resolve(cleanObject)
+      })
+    })
+  })
+}
+
+// EXAMPLE USAGE --> find("People", {name: "John Doe"})
 let find = (tableName: string, queryDictionary: {[string]: string}): Promise<any, Error> => {
   return new Promise(function(resolve, reject) {
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)
       sheet.getRows({ offset: 1 }, function( err, rows ){
         if(err)( console.log(err), console.trace(), resolve("Error at line ") )
-
+        let objectsArray = (_.filter(rows, queryDictionary) || {})
+        let cleanObjectsArray = objectsArray.map((item) => {
+          return stripAndCleanRecord(item)
+        })
+        resolve(cleanObjectsArray)
       })
     })
   })
+}
+
+let remove = (tableName: string, queryDictionary: any): Promise<Array<string>,Error> => {
+  return new Promise(function(resolve, reject) {
+    getTable(tableName, (err, sheet) => {
+      if(err) reject(err)
+      sheet.getRows({ offset: 1 }, function( err, rows ){
+        if(err)( console.log(err), console.trace(), resolve("Error at line ") )
+        let object = (_.find(rows, queryDictionary) || {})
+      })
+
+      // let index = _.findIndex(sheet, function(item) {
+      //   return item.id == 2
+      // })
+    })
+  });
 }
 
 
@@ -184,26 +234,21 @@ let getAllHeadersOfTable = (tableName: string): Promise<Array<string>,Error> => 
   })
 }
 
-let remove = (tableName: string, matchCriteria: any): Promise<Array<string>,Error> => {
-  return new Promise(function(resolve, reject) {
-    getTable(tableName, (err, sheet) => {
-      if(err) reject(err)
-      // let index = _.findIndex(sheet, function(item) {
-      //   return item.id == 2
-      // })
-    })
-  });
-}
+
 
 // ----- Module Exports -----
 
-// Use this to insert records.
+// Use this to connect to the DB
 // Example usage:
 exports.connect = connect
 
-// Use this to insert records.
+// Use this to get the connection status (connected or not connected)
 // Example usage:
-exports.isConnected = isConnected
+exports.getConnectionStatus = getConnectionStatus
+
+// Use this to generate a template object for querying or inserting into the DB
+// Example usage:
+exports.template = template
 
 // Use this to insert records.
 // Example usage:
@@ -213,7 +258,11 @@ exports.insert = insert
 // Example usage:
 exports.update =  update
 
-// Use this to find records.
+// Use this to find one record (single object)
+// Example usage:
+exports.findOne = findOne
+
+// Use this to find records (array of objects)
 // Example usage:
 exports.find = find
 

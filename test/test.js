@@ -1,6 +1,6 @@
 const SecureSheetsDB = require('../index.js')
 const creds = require( '../google-generated-creds.json');
-const { test, success, output, done } = require('./TestHelpers.js')
+const { test, success, output, done, strip } = require('./TestHelpers.js')
 
 // ------ Run Test Main Function ------
 let run = async () => {
@@ -19,25 +19,32 @@ let run = async () => {
   success()
 
   // Third Test
-  test(3, "Testing for data insertion")
+  test(3, "Testing to generate insertion template")
+  let template = await 
+
+  // Fourth Test
+  test(4, "Testing for data insertion")
   let insertion = await SecureSheetsDB.insert("Sheet1", {nameofeatery: "Raffles Place", description:"A place with lots of food.", latitude: 7.77, longitude: 5.55})
-  delete insertion['id'] // Remove redundant metadata from object
-  delete insertion['_xml'] // Remove redundant metadata from object
-  delete insertion['app:edited'] // Remove redundant metadata from object
-  delete insertion['_links'] // Remove redundant metadata from object
+  strip(insertion)
   output(insertion);
   success()
 
-  // Fourth Test
-  test(4, "Testing to get table headers")
+  // Fifth Test
+  test(5, "Testing to get table headers")
   let headers = await SecureSheetsDB.getAllHeadersOfTable("Sheet1")
   output(headers)
   success()
 
-  // Fifth Test
-  test(5, "Testing to find record")
-  let finder = await SecureSheetsDB.find("Sheet1", {nameofeatery: "Raffles Place"})
+  // Sixth Test
+  test(6, "Testing to findOne record")
+  let finder = await SecureSheetsDB.findOne("Sheet1", {nameofeatery: "Sidewalk Cafe", description:"Foodcourt beside Funan IT Mall"})
   output(finder)
+  success()
+
+  // Seventh Test
+  test(7, "Testing to find records")
+  let finder2 = await SecureSheetsDB.find("Sheet1", {description:"A place with lots of food.", latitude:"7.77"})
+  output(finder2)
   success()
 
 

@@ -37,7 +37,7 @@ let getTable = (tableName, callback ) => {
 
 // Takes in a Sheet object.
 // Returns an array of strings, which are the table headers.
-// Example: ['id', 'name', 'gender', 'age']
+// Example return object: ['id', 'name', 'gender', 'age']
 let getTableHeaders = (sheet, callback) => {
   sheet.getCells({
     'min-row': 1,
@@ -48,6 +48,18 @@ let getTableHeaders = (sheet, callback) => {
     let tableHeaders = cells.map(cell => cell._value.replace(/[^A-Za-z-]/g, "").toLowerCase())
     callback(null, tableHeaders)
   })
+}
+
+// Takes in a SpreadsheetRow Object.
+// Returns an array of record objects, stripped of redundant metadata fields}
+let stripAndCleanRecord = (spreadsheetRowObject) => {
+  delete spreadsheetRowObject['id'] // Remove redundant metadata from object
+  delete spreadsheetRowObject['_xml'] // Remove redundant metadata from object
+  delete spreadsheetRowObject['app:edited'] // Remove redundant metadata from object
+  delete spreadsheetRowObject['_links'] // Remove redundant metadata from object
+  delete spreadsheetRowObject['save'] // Remove redundant metadata from object
+  delete spreadsheetRowObject['del'] // Remove redundant metadata from object
+  return JSON.parse( JSON.stringify(spreadsheetRowObject) )
 }
 
 // ------- CORE FEATURES --------
@@ -150,13 +162,32 @@ let update = (tableName, searchCriteria, updateRecord, {upsert = false}) => {
 
 
 // EXAMPLE USAGE --> find("People", {name: "John Doe"})
+let findOne = (tableName, queryDictionary) => {
+  return new Promise(function(resolve, reject) {
+    getTable(tableName, (err, sheet) => {
+      if(err) reject(err)
+      sheet.getRows({ offset: 1 }, function( err, rows ){
+        if(err)( console.log(err), console.trace(), resolve("Error at line ") )
+        let object = (_.find(rows, queryDictionary) || {})
+        let cleanObject = stripAndCleanRecord(object)
+        resolve(cleanObject)
+      })
+    })
+  })
+}
+
+// EXAMPLE USAGE --> find("People", {name: "John Doe"})
 let find = (tableName, queryDictionary) => {
   return new Promise(function(resolve, reject) {
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)
       sheet.getRows({ offset: 1 }, function( err, rows ){
         if(err)( console.log(err), console.trace(), resolve("Error at line ") )
-
+        let objectsArray = (_.filter(rows, queryDictionary) || {})
+        let cleanObjectsArray = objectsArray.map((item) => {
+          return stripAndCleanRecord(item)
+        })
+        resolve(cleanObjectsArray)
       })
     })
   })
@@ -197,7 +228,7 @@ let remove = (tableName, matchCriteria) => {
 
 // ----- Module Exports -----
 
-// Use this to insert records.
+// Use this to connect to the DB
 // Example usage:
 exports.connect = connect
 
@@ -212,6 +243,10 @@ exports.insert = insert
 // Use this to update records.
 // Example usage:
 exports.update =  update
+
+// Use this to find records.
+// Example usage:
+exports.findOne = findOne
 
 // Use this to find records.
 // Example usage:
