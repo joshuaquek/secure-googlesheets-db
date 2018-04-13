@@ -1,7 +1,7 @@
 // @flow
 const GoogleSpreadsheet = require('google-spreadsheet')
 const Promise = require('bluebird')
-const _ = require('lodash');
+const _ = require('lodash')
 
 let isConnected: boolean = false
 let database: GoogleSpreadsheet = undefined
@@ -45,7 +45,7 @@ let getTableHeaders = (sheet: any, callback: (error: string | null, headersArray
     'return-empty': false
   }, function(err, cells) {
     if(err) callback(err,[])
-    let tableHeaders = cells.map(cell => cell._value.replace(/[^A-Za-z-]/g, "").toLowerCase())
+    let tableHeaders: Array<string> = cells.map(cell => cell._value.replace(/[^A-Za-z-]/g, "").toLowerCase())
     callback(null, tableHeaders)
   })
 }
@@ -66,7 +66,7 @@ let stripAndCleanRecord = (spreadsheetRowObject: any): any => {
 
 let connect = ( sheetId: string , credentials: any ): Promise<boolean,Error> => {
   return new Promise( (resolve, reject) => {
-    let doc:GoogleSpreadsheet = new GoogleSpreadsheet(sheetId)
+    let doc: GoogleSpreadsheet = new GoogleSpreadsheet(sheetId)
     doc.useServiceAccountAuth(credentials, () => {
       database = doc // assign overall GoogleSpreadsheet object as global module database variable
       doc.getInfo(function(err, workbookData) {
@@ -88,7 +88,7 @@ let getConnectionStatus = (): boolean => {
 let template = (tableName: string): Promise<any,Error>  => {
   return new Promise(async (resolve, reject) => {
     try{ // Try block for handling Promise rejection
-      let headersArray: [string] = await getAllHeadersOfTable(tableName)
+      let headersArray: Array<string> = await getAllHeadersOfTable(tableName)
       let templateObject: any = {}
       headersArray.forEach((header) => {
         templateObject[header] = ""
@@ -131,7 +131,7 @@ let insert = ( tableName: string , insertObject: {[string]: string} ): Promise<a
 let update = (tableName: string, searchCriteria: any, updateRecord: any, {upsert = false}: {upsert: boolean}): Promise<any, Error> => {
   return new Promise(async (resolve, reject) => {
     // First check if searchCriteria and updateRecord contains fields that are not in the table
-    let headersArray: [string] = await getAllHeadersOfTable(tableName)
+    let headersArray: Array<string> = await getAllHeadersOfTable(tableName)
     for(let header: string in searchCriteria){
       if(!_.includes(headersArray,header)) reject(Error("ERROR: Search Criteria contains field(s) that do not exist in the specified table."))
     }
@@ -149,7 +149,7 @@ let update = (tableName: string, searchCriteria: any, updateRecord: any, {upsert
           rows = _.filter(rows, searchCriteria)
           for(let key in rows){
             rows[key] = _.merge({},rows[key], updateRecord)
-            rows[key].save();
+            rows[key].save()
           }
           resolve(rows)
         })
@@ -202,21 +202,24 @@ let remove = (tableName: string, queryDictionary: any): Promise<Array<string>,Er
       if(err) reject(err)
       sheet.getRows({ offset: 1 }, function( err, rows ){
         if(err)( console.log(err), console.trace(), resolve("Error at line ") )
-        let object = (_.find(rows, queryDictionary) || {})
+        // let object = (_.find(rows, queryDictionary) || {})
+        let indexOfObjectToRemove = _.findIndex(rows, queryDictionary)
+        rows[indexOfObjectToRemove].del()
+        resolve() // Done
       })
 
       // let index = _.findIndex(sheet, function(item) {
       //   return item.id == 2
       // })
     })
-  });
+  })
 }
 
 
 let getAllTableNames = (): Promise<Array<any>,Error> => {
   return new Promise( (resolve, reject) => {
     if(!isConnected) reject(Error("ERROR: Database is not connected."))
-    let worksheets = workbook.worksheets.map((sheet) => {
+    let worksheets: [any] = workbook.worksheets.map((sheet) => {
       return sheet.title
     })
     resolve(worksheets)
@@ -246,7 +249,7 @@ exports.connect = connect
 // Example usage:
 exports.getConnectionStatus = getConnectionStatus
 
-// Use this to generate a template object for querying or inserting into the DB
+// Use this to generate a template object for querying or inserting a new record into the DB
 // Example usage:
 exports.template = template
 
@@ -266,11 +269,11 @@ exports.findOne = findOne
 // Example usage:
 exports.find = find
 
-// Gets an array of all table names (array of strings) in the DB.
+// Use this to get an array of table names within the DB (array of strings)
 // Example usage:
 exports.getAllTableNames = getAllTableNames
 
-// Gets all of the headers/fields in the specified table (array of strings).
+// Gets all of the headers/fields in the specified table (array of strings)
 // Example usage:
 exports.getAllHeadersOfTable = getAllHeadersOfTable
 
