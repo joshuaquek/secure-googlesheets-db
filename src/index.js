@@ -14,7 +14,7 @@ let currentSheet: any = undefined // Used after connecting
 // Takes in the table name and an array of strings, which are the headers that you want the table to have.
 // Returns a Sheet object (and also creates a new sheet in google sheets itself).
 let createTable = (tableName: string, headerTitles: Array<string>, callback: (error: Error | null, sheet: any ) => void) => {
-  if(!isConnected) callback(Error("ERROR: Database is not connected."), {})
+  if(!isConnected) callback( Error("ERROR: Database is not connected."), {} )
   database.addWorksheet({title: tableName, headers: headerTitles}, (err, sheet) => {
     err ? callback(err, {} ) : callback(null, sheet)
   })
@@ -25,13 +25,11 @@ let createTable = (tableName: string, headerTitles: Array<string>, callback: (er
 // Returns a Sheet object in the form of a callback
 let getTable = (tableName: string, callback: (error: Error | null, sheet: any ) => void ): void => {
   if(!isConnected) callback(Error("ERROR: Database is not connected."), {})
-  let sheet: any | null = sheets.find((sheet) => {
-    return sheet.title === tableName
-  }) || null
+  let sheet: any | null = sheets.find( sheet => sheet.title === tableName) || null
   if(sheet != null){
-    callback(null, sheet)
+    callback( null, sheet )
   }else{
-    callback(Error("ERROR: Table/Sheet does not exist."), {})
+    callback( Error("ERROR: Table/Sheet does not exist."), {} )
   }
 }
 
@@ -43,9 +41,9 @@ let getTableHeaders = (sheet: any, callback: (error: string | null, headersArray
     'min-row': 1,
     'max-row': 1,
     'return-empty': false
-  }, function(err, cells) {
+  }, (err, cells) => {
     if(err) callback(err,[])
-    let tableHeaders: Array<string> = cells.map(cell => cell._value.replace(/[^A-Za-z-]/g, "").toLowerCase())
+    let tableHeaders: Array<string> = cells.map( cell => cell._value.replace(/[^A-Za-z-]/g, "").toLowerCase() )
     callback(null, tableHeaders)
   })
 }
@@ -69,7 +67,7 @@ let connect = ( sheetId: string , credentials: any ): Promise<boolean,Error> => 
     let doc: GoogleSpreadsheet = new GoogleSpreadsheet(sheetId)
     doc.useServiceAccountAuth(credentials, () => {
       database = doc // assign overall GoogleSpreadsheet object as global module database variable
-      doc.getInfo(function(err, workbookData) {
+      doc.getInfo((err, workbookData) => {
         if(err) ( console.log(err), reject(false) )
         isConnected =  true // change isConnected flag to true
         workbook =  workbookData // assign workbook object as a global module variable
@@ -104,15 +102,15 @@ let template = (tableName: string): Promise<any,Error>  => {
 // ... If say 'lastname' is not present as a column in the DB, it will simply skip and not insert. No errors thrown.
 let insert = ( tableName: string , insertObject: {[string]: string} ): Promise<any,Error> => {
   return new Promise( (resolve, reject) => {
-    if(tableName.length == 0) reject(Error("ERROR: Table Name must not be empty."))
-    if(_.isEmpty(insertObject)) reject(Error("ERROR: Empty object not allowed to be inserted."))
-    getTable(tableName, (err, sheet) => {
+    if( tableName.length == 0 ) reject(Error("ERROR: Table Name must not be empty."))
+    if( _.isEmpty(insertObject) ) reject(Error("ERROR: Empty object not allowed to be inserted."))
+    getTable( tableName, (err, sheet) => {
       if(err){ // Table does not exist, create table then insert data
         let tableTitles: Array<string> = []
         for(let key:string in insertObject){
           tableTitles.push(key)
         }
-        createTable(tableName, tableTitles, (err, table) => {
+        createTable( tableName, tableTitles, (err, table) => {
           if(err) reject(err)
           table.addRow( insertObject , (err, row) => {
             err ? reject(err): resolve(row)
@@ -144,12 +142,12 @@ let update = (tableName: string, searchCriteria: any, updateRecord: any, {upsert
       // Update the record
       getTable(tableName, (err, sheet) => {
         if(err) reject(err)
-        sheet.getRows({ offset: 1 }, function( err, rows ){
+        sheet.getRows({ offset: 1 }, async ( err, rows ) => {
           if(err) console.log(err)
           rows = _.filter(rows, searchCriteria)
           for(let key in rows){
             rows[key] = _.merge({},rows[key], updateRecord)
-            rows[key].save()
+            await new Promise((resolveRowSave, rejectRowSave) => rows[key].save(() => resolveRowSave()))
           }
           resolve(rows)
         })
@@ -166,10 +164,10 @@ let update = (tableName: string, searchCriteria: any, updateRecord: any, {upsert
 
 // EXAMPLE USAGE --> find("People", {name: "John Doe"})
 let findOne = (tableName: string, queryDictionary: {[string]: string}): Promise<any, Error> => {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)
-      sheet.getRows({ offset: 1 }, function( err, rows ){
+      sheet.getRows({ offset: 1 }, ( err, rows ) => {
         if(err)( console.log(err), console.trace(), resolve("Error at line ") )
         let object = (_.find(rows, queryDictionary) || {})
         let cleanObject = stripAndCleanRecord(object)
@@ -181,36 +179,44 @@ let findOne = (tableName: string, queryDictionary: {[string]: string}): Promise<
 
 // EXAMPLE USAGE --> find("People", {name: "John Doe"})
 let find = (tableName: string, queryDictionary: {[string]: string}): Promise<any, Error> => {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)
-      sheet.getRows({ offset: 1 }, function( err, rows ){
+      sheet.getRows({ offset: 1 }, ( err, rows ) => {
         if(err)( console.log(err), console.trace(), resolve("Error at line ") )
-        let objectsArray = (_.filter(rows, queryDictionary) || {})
-        let cleanObjectsArray = objectsArray.map((item) => {
-          return stripAndCleanRecord(item)
-        })
+        let objectsArray = ( _.filter(rows, queryDictionary) || {} )
+        let cleanObjectsArray = objectsArray.map( item => stripAndCleanRecord(item) )
         resolve(cleanObjectsArray)
       })
     })
   })
 }
 
-let remove = (tableName: string, queryDictionary: any): Promise<Array<string>,Error> => {
-  return new Promise(function(resolve, reject) {
+let removeOne = (tableName: string, queryDictionary: any): Promise<Array<string>,Error> => {
+  return new Promise((resolve, reject) => {
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)
-      sheet.getRows({ offset: 1 }, function( err, rows ){
+      sheet.getRows({ offset: 1 }, ( err, rows ) => {
         if(err)( console.log(err), console.trace(), resolve("Error at line ") )
-        // let object = (_.find(rows, queryDictionary) || {})
-        let indexOfObjectToRemove = _.findIndex(rows, queryDictionary)
-        rows[indexOfObjectToRemove].del()
-        resolve() // Done
+        let indexOfObjectToRemove = _.findIndex( rows, queryDictionary )
+        rows[indexOfObjectToRemove].del( () => resolve() )
       })
+    })
+  })
+}
 
-      // let index = _.findIndex(sheet, function(item) {
-      //   return item.id == 2
-      // })
+let remove = ( tableName: string, queryDictionary: any): Promise<Array<string>,Error> => {
+  return new Promise( (resolve, reject) => {
+    getTable( tableName, (err, sheet) => {
+      if(err) reject(err)
+      sheet.getRows( { offset: 1 }, ( err, rows ) => {
+        if(err)( console.log(err), console.trace(), resolve("Error at line ") )
+        _.forEach( rows, (rowObject, indexOfObjectToRemove) => {
+          if( _.isMatch(rowObject, queryDictionary) ){
+            rows[indexOfObjectToRemove].del( () => resolve() )
+          }
+        })
+      })
     })
   })
 }
@@ -218,16 +224,14 @@ let remove = (tableName: string, queryDictionary: any): Promise<Array<string>,Er
 
 let getAllTableNames = (): Promise<Array<any>,Error> => {
   return new Promise( (resolve, reject) => {
-    if(!isConnected) reject(Error("ERROR: Database is not connected."))
-    let worksheets: [any] = workbook.worksheets.map((sheet) => {
-      return sheet.title
-    })
+    if(!isConnected) reject( Error("ERROR: Database is not connected.") )
+    let worksheets: [any] = workbook.worksheets.map( sheet => sheet.title )
     resolve(worksheets)
   })
 }
 
 let getAllHeadersOfTable = (tableName: string): Promise<Array<string>,Error> => {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     getTable(tableName, (err, sheet) => {
       if(err) reject(err)
       getTableHeaders(sheet, (err, headers) => {
@@ -276,6 +280,10 @@ exports.getAllTableNames = getAllTableNames
 // Gets all of the headers/fields in the specified table (array of strings)
 // Example usage:
 exports.getAllHeadersOfTable = getAllHeadersOfTable
+
+// Removes only one record based off a specified query.
+// Example usage:
+exports.removeOne = removeOne
 
 // Removes record(s) based off a specified query.
 // Example usage:

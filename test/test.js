@@ -20,7 +20,7 @@ let run = async () => {
 
   // Third Test
   test(3, "Testing to generate insertion template")
-  let template = await 
+  let template = await
 
   // Fourth Test
   test(4, "Testing for data insertion")
@@ -37,14 +37,20 @@ let run = async () => {
 
   // Sixth Test
   test(6, "Testing to findOne record")
-  let finder = await SecureSheetsDB.findOne("Sheet1", {nameofeatery: "Sidewalk Cafe", description:"Foodcourt beside Funan IT Mall"})
-  output(finder)
+  let findOneer = await SecureSheetsDB.findOne("Sheet1", {nameofeatery: "Sidewalk Cafe", description:"Foodcourt beside Funan IT Mall"})
+  output(findOneer)
   success()
 
   // Seventh Test
   test(7, "Testing to find records")
-  let finder2 = await SecureSheetsDB.find("Sheet1", {description:"A place with lots of food.", latitude:"7.77"})
-  output(finder2)
+  let finder = await SecureSheetsDB.find("Sheet1", {description:"A place with lots of food.", latitude:"7.77"})
+  output(finder)
+  success()
+
+  // Seventh Test
+  test(8, "Testing to find records")
+  let remover = await SecureSheetsDB.remove("Sheet1", {description:"A place with lots of food.", latitude:"7.77"})
+  output(finder)
   success()
 
 
