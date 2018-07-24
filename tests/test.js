@@ -1,8 +1,14 @@
-const SecureSheetsDB = require('../index.js')
+const SecureSheetsDB = require('../old.js')
 const creds = require('../google-generated-creds.json')
 
 // ------ Run Test Main Function ------
-let run = async () => {
+
+run().catch((error) => {
+  console.log(error)
+})
+
+// Hoisted Function
+async function run () {
   console.log('⚠️ ⚠️  Start Tests ⚠️ ⚠️ \n')
 
   // First Test
@@ -19,6 +25,8 @@ let run = async () => {
 
   // Third Test
   console.log(3, 'Testing to generate insertion template')
+  let template = await SecureSheetsDB.template('Sheet1')
+  console.log(template)
   console.log('\n\n')
 
   // Fourth Test
@@ -63,8 +71,3 @@ let run = async () => {
   // output(updating2)
   // success()
 }
-
-// Run test
-run().catch((error) => {
-  console.log(error)
-})

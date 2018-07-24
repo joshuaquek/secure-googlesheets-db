@@ -13,7 +13,7 @@ let currentSheet // Used after connecting
 // Takes in the table name and an array of strings, which are the headers that you want the table to have.
 // Returns a Sheet object (and also creates a new sheet in google sheets itself).
 let createTable = (tableName, headerTitles, callback) => {
-  if (!isConnected) callback(Error('ERROR: Database is not connected.'), {})
+  if (!isConnected) callback(Error('ERROR: GoogleSheets Database is not connected.'), {})
   database.addWorksheet({title: tableName, headers: headerTitles}, (err, sheet) => {
     err ? callback(err, {}) : callback(null, sheet)
   })
